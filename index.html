@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MintBoard — Free mints for Agent ID holders</title>
+<meta name="description" content="MintBoard lists verified-free mints on BNB Smart Chain. Agent ID holders mint a free daily badge, build streaks, complete quests, and earn referral badges.">
+<meta property="og:title" content="MintBoard — Free mints for Agent ID holders">
+<meta property="og:description" content="A free daily badge, streaks, quests and referral badges. Verified-free mints only, gas costs only.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">M</span> MintBoard</div>
+  <div class="top-actions">
+    <span id="networkBadge" class="pill hidden"></span>
+    <span id="accountBadge" class="pill hidden"></span>
+    <button id="connectBtn" class="btn primary">Connect wallet</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">Free mints &middot; Daily badges &middot; Agent ID only</p>
+    <h1>Mint free. Show up daily. Build your streak.</h1>
+    <p class="lede">MintBoard lists genuinely free mints on BNB Smart Chain — each one checked
+      on-chain before it appears. If you hold an Agent ID, mint a free badge every day,
+      climb the leaderboard, and bring your friends along for referral badges.</p>
+    <div class="cta-row">
+      <button id="heroMintBtn" class="btn primary large">Mint today&rsquo;s badge</button>
+      <button id="heroBoardBtn" class="btn large">Browse free mints</button>
+    </div>
+    <div class="stats" aria-label="Live stats">
+      <div class="stat"><span class="stat-value" id="statBadges">&mdash;</span><span class="stat-label">Badges minted</span></div>
+      <div class="stat"><span class="stat-value" id="statMinters">&mdash;</span><span class="stat-label">Minters</span></div>
+      <div class="stat"><span class="stat-value" id="statStreak">&mdash;</span><span class="stat-label">Best streak</span></div>
+      <div class="stat"><span class="stat-value countdown" id="statCountdown">--:--:--</span><span class="stat-label">Next badge in</span></div>
+    </div>
+    <div id="deployBanner" class="banner hidden"></div>
+    <div id="statusLine" class="status" role="status"></div>
+  </section>
+
+  <section class="showcase" aria-label="Badges to collect">
+    <h2>Four badges to collect</h2>
+    <p class="section-sub">Every badge is free — minting costs gas only. No payments, no approvals, ever.</p>
+    <div class="showcase-grid">
+      <div class="badge-card">
+        <img src="meta/daily.svg" alt="Daily badge artwork" width="120" height="120">
+        <h3>Daily</h3>
+        <p>One free badge every UTC day. Miss a day and your streak restarts — the badge stays yours.</p>
+      </div>
+      <div class="badge-card">
+        <img src="meta/streak.svg" alt="Streak badge artwork" width="120" height="120">
+        <h3>Streak</h3>
+        <p>Claim milestones at 3, 7, 14 and 30 days in a row. The 30-day badge is the one to brag about.</p>
+      </div>
+      <div class="badge-card">
+        <img src="meta/quest.svg" alt="Quest badge artwork" width="120" height="120">
+        <h3>Quest</h3>
+        <p>Hold a featured NFT and the contract verifies it on-chain. No forms, no screenshots, no trust needed.</p>
+      </div>
+      <div class="badge-card">
+        <img src="meta/referral.svg" alt="Referral badge artwork" width="120" height="120">
+        <h3>Referral</h3>
+        <p>Share your link. Earn badges at 1, 5, 10 and 25 friends minting their first badge through you.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="how" aria-label="How it works">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step"><span class="step-num">1</span><h3>Hold an Agent ID</h3><p>Badges are for Agent ID holders only. Your Agent ID is checked live on-chain, every time.</p></div>
+      <div class="step"><span class="step-num">2</span><h3>Mint your daily badge</h3><p>Connect your wallet, mint in one tap, confirm in your wallet. Free badge, gas only.</p></div>
+      <div class="step"><span class="step-num">3</span><h3>Keep the streak alive</h3><p>Come back every day, finish quests, invite friends — and watch your name climb the board.</p></div>
+    </div>
+  </section>
+
+  <section class="activity" aria-label="Recent activity">
+    <h2>Happening now</h2>
+    <p class="section-sub">Fresh mints, straight from the chain.</p>
+    <ul id="activityFeed" class="activity-feed"><li class="muted">Activity appears here after launch.</li></ul>
+  </section>
+
+  <nav class="tabs" aria-label="Sections">
+    <button data-tab="board" class="tab active">Board</button>
+    <button data-tab="badges" class="tab">My badges</button>
+    <button data-tab="quests" class="tab">Quests</button>
+    <button data-tab="leaderboard" class="tab">Leaderboard</button>
+  </nav>
+
+  <section id="tab-board" class="panel">
+    <div class="panel-head">
+      <h2>Free-mint board</h2>
+      <p>Every listing was verified free: claiming costs gas only, with no payment and no token approval. New verified mints are added as they appear — check back often.</p>
+    </div>
+    <div id="listings" class="cards"><p class="muted">Loading listings…</p></div>
+  </section>
+
+  <section id="tab-badges" class="panel hidden">
+    <div class="panel-head">
+      <h2>My badges</h2>
+      <p>All badges are free — minting costs gas only. You confirm every transaction in your own wallet.</p>
+    </div>
+    <div id="accountCard" class="card">
+      <p class="muted">Connect your wallet to see your badges, streak, and referrals.</p>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Daily badge</h3>
+        <p>One free badge per Agent ID holder per day (UTC). Minting daily builds your streak.</p>
+        <button id="mintBtn" class="btn primary" disabled>Connect wallet to mint</button>
+        <p id="mintState" class="muted small"></p>
+      </div>
+      <div class="card">
+        <h3>Your referral link</h3>
+        <p>Share it. When someone mints their first badge through your link, you both get credit —
+          and you earn referral badges at 1, 5, 10, and 25 referrals.</p>
+        <div class="refrow">
+          <input id="refLink" type="text" readonly value="Connect your wallet to get your link">
+          <button id="copyRefBtn" class="btn" disabled>Copy</button>
+        </div>
+        <div class="refrow">
+          <button id="shareXBtn" class="btn">Share on X</button>
+        </div>
+        <p id="refState" class="muted small"></p>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Streak badges</h3>
+        <p>Claim a badge for each streak milestone you reach.</p>
+        <div id="streakClaims" class="claimrow"></div>
+      </div>
+      <div class="card">
+        <h3>Referral badges</h3>
+        <p>Claim a badge for each referral milestone you reach.</p>
+        <div id="referralClaims" class="claimrow"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-quests" class="panel hidden">
+    <div class="panel-head">
+      <h2>Quests</h2>
+      <p>Hold the featured NFT and the contract verifies it on-chain, then awards a quest badge. No forms, no screenshots.</p>
+    </div>
+    <div id="quests" class="cards"><p class="muted">Loading quests…</p></div>
+  </section>
+
+  <section id="tab-leaderboard" class="panel hidden">
+    <div class="panel-head">
+      <h2>Leaderboard</h2>
+      <p>Computed from on-chain events. Streaks count consecutive UTC days ending today or yesterday. Your streak could be at the top — mint daily to get there.</p>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Longest streaks</h3>
+        <ol id="streakBoard" class="board"><li class="muted">Loading…</li></ol>
+      </div>
+      <div class="card">
+        <h3>Top referrers</h3>
+        <ol id="referralBoard" class="board"><li class="muted">Loading…</li></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq" aria-label="Frequently asked questions">
+    <h2>Questions, answered</h2>
+    <details>
+      <summary>Is it really free?</summary>
+      <p>Yes. Every badge costs 0 — you only pay the network gas for your transaction. The contract refuses payments outright, and MintBoard never asks you to approve token spending.</p>
+    </details>
+    <details>
+      <summary>Do I need an Agent ID?</summary>
+      <p>Yes. Minting is gated to wallets holding an Agent ID, checked live against the registry on-chain. Agent IDs are claimed in the Binance App.</p>
+    </details>
+    <details>
+      <summary>What happens if I miss a day?</summary>
+      <p>Your streak restarts at 1 on your next mint — but every badge you already own stays yours forever. The daily countdown at the top shows exactly when the next day starts (UTC).</p>
+    </details>
+    <details>
+      <summary>What are the badges worth?</summary>
+      <p>They are free collectibles with no promised value or returns. The fun is the streak, the quests, the leaderboard — and the friends you bring along.</p>
+    </details>
+    <details>
+      <summary>Is my wallet safe here?</summary>
+      <p>MintBoard never asks for seed phrases, private keys, or passwords, never moves your funds, and never asks for token approvals. You review and confirm every transaction in your own wallet, and the contract source is public and verified.</p>
+    </details>
+  </section>
+
+  <footer>
+    <p><strong>Please read:</strong> badges are free collectibles with no promised value or returns.
+      Minting costs gas only. MintBoard never asks for seed phrases, private keys, or passwords,
+      never moves your funds, and never asks you to approve token spending. You review and confirm
+      every transaction in your own wallet.</p>
+    <p class="muted small">
+      <span id="contractLink">Contract: not deployed yet.</span>
+      Agent ID registry: <a href="https://bscscan.com/address/0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F" target="_blank" rel="noopener">BscScan</a>.
+      Built for the Binance Agent ID Hackathon. MintBoard is an independent community project.
+    </p>
+  </footer>
+</main>
+
+<script src="vendor/ethers.umd.min.js"></script>
+<script src="config.js"></script>
+<script src="scan.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
