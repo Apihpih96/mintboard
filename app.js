@@ -29,6 +29,9 @@
     "function owner() view returns (address)",
     "event BadgeMinted(address indexed to, uint256 indexed tokenId, uint256 indexed day)",
     "event ReferralRecorded(address indexed referrer, address indexed referee)",
+    "event QuestCompleted(address indexed account, uint256 indexed questId, uint256 indexed tokenId)",
+    "event StreakBadgeClaimed(address indexed account, uint256 days_, uint256 indexed tokenId)",
+    "event ReferralBadgeClaimed(address indexed account, uint256 count, uint256 indexed tokenId)",
   ];
   var REGISTRY_ABI = ["function balanceOf(address) view returns (uint256)"];
   var ZERO = "0x0000000000000000000000000000000000000000";
@@ -45,6 +48,10 @@
   var referralTierList = [1, 5, 10, 25];
   var mintsPromise = null;
   var refsPromise = null;
+  var questBadgesPromise = null;
+  var streakBadgesPromise = null;
+  var referralBadgesPromise = null;
+  var pointsPromise = null;
   var latestBlockPromise = null;
 
   function $(id) { return document.getElementById(id); }
@@ -296,6 +303,7 @@
         + "<div><span class=\"label\">Badges owned</span><span class=\"value\">" + esc(owned.toString()) + "</span></div>"
         + "<div><span class=\"label\">Current streak</span><span class=\"value\">" + esc(streak.toString()) + " days</span></div>"
         + "<div><span class=\"label\">Referrals</span><span class=\"value\">" + esc(refs.toString()) + "</span></div>"
+        + "<div><span class=\"label\">Points</span><span class=\"value\" id=\"myPoints\">…</span></div>"
         + "<div><span class=\"label\">Referred by</span><span class=\"value\">" + (by === ZERO ? "—" : esc(short(by))) + "</span></div>"
         + "</div>";
       var mintBtn = $("mintBtn");
@@ -324,11 +332,24 @@
       $("refState").textContent = (rp && rp.toLowerCase() !== account.toLowerCase())
         ? "You arrived via " + short(rp) + " — they get referral credit when you mint your first badge."
         : "";
+      renderMyPoints();
       // Claim buttons
       await renderClaims(holds);
     } catch (e) {
       card.innerHTML = '<p class="muted">Could not load your account. Please refresh and try again.</p>';
     }
+  }
+
+  // Fills the Points row of the account card from the shared points
+  // table. Fire-and-forget: the row keeps its "…" placeholder on failure.
+  async function renderMyPoints() {
+    var el = $("myPoints");
+    if (!el || !readContract || !CONFIG.startBlock || !account) return;
+    try {
+      var table = await fetchPointsTable();
+      var row = table[account.toLowerCase()];
+      el.textContent = row ? row.points.toLocaleString() : "0";
+    } catch (e) { el.textContent = "—"; }
   }
 
   async function renderClaims(holds) {
@@ -389,6 +410,10 @@
     if (ok) {
       mintsPromise = null;
       refsPromise = null;
+      questBadgesPromise = null;
+      streakBadgesPromise = null;
+      referralBadgesPromise = null;
+      pointsPromise = null;
       latestBlockPromise = null;
       await loadStats();
       await loadActivity();
@@ -457,6 +482,59 @@
     }
     return refsPromise;
   }
+  function fetchQuestBadges() {
+    if (!questBadgesPromise) {
+      questBadgesPromise = fetchLatestBlock().then(function (latest) {
+        return MintBoardScan.fetchAllCached(readContract, readContract.filters.QuestCompleted(), CONFIG.startBlock, latest, {
+          key: eventCacheKey("questev"),
+          argNames: ["account", "questId"],
+        });
+      });
+      questBadgesPromise.catch(function () { questBadgesPromise = null; });
+    }
+    return questBadgesPromise;
+  }
+  function fetchStreakBadges() {
+    if (!streakBadgesPromise) {
+      streakBadgesPromise = fetchLatestBlock().then(function (latest) {
+        return MintBoardScan.fetchAllCached(readContract, readContract.filters.StreakBadgeClaimed(), CONFIG.startBlock, latest, {
+          key: eventCacheKey("streakev"),
+          argNames: ["account", "days_"],
+        });
+      });
+      streakBadgesPromise.catch(function () { streakBadgesPromise = null; });
+    }
+    return streakBadgesPromise;
+  }
+  function fetchReferralBadges() {
+    if (!referralBadgesPromise) {
+      referralBadgesPromise = fetchLatestBlock().then(function (latest) {
+        return MintBoardScan.fetchAllCached(readContract, readContract.filters.ReferralBadgeClaimed(), CONFIG.startBlock, latest, {
+          key: eventCacheKey("refev"),
+          argNames: ["account", "count"],
+        });
+      });
+      referralBadgesPromise.catch(function () { referralBadgesPromise = null; });
+    }
+    return referralBadgesPromise;
+  }
+  // Points table for every address, from the four badge-event fetches.
+  // One shared promise so the account card and the leaderboard read the
+  // same data instead of scanning four times.
+  function fetchPointsTable() {
+    if (!pointsPromise) {
+      pointsPromise = Promise.all([fetchMints(), fetchQuestBadges(), fetchStreakBadges(), fetchReferralBadges()]).then(function (res) {
+        return MintBoardPoints.compute({
+          mints: res[0].events,
+          quests: res[1].events,
+          streaks: res[2].events,
+          referrals: res[3].events,
+        });
+      });
+      pointsPromise.catch(function () { pointsPromise = null; });
+    }
+    return pointsPromise;
+  }
 
   async function loadStats() {
     if (!readContract || !CONFIG.startBlock) return; // placeholders stay
@@ -524,9 +602,11 @@
   async function loadLeaderboard() {
     var sBoard = $("streakBoard");
     var rBoard = $("referralBoard");
+    var pBoard = $("pointsBoard");
     if (!readContract || !CONFIG.startBlock) {
       sBoard.innerHTML = '<li class="muted">The leaderboard appears after launch.</li>';
       rBoard.innerHTML = '<li class="muted">The leaderboard appears after launch.</li>';
+      pBoard.innerHTML = '<li class="muted">The leaderboard appears after launch.</li>';
       return;
     }
     try {
@@ -566,9 +646,19 @@
           return '<li><a class="addr" href="' + esc(bscscan(x.addr)) + '" target="_blank" rel="noopener">' + esc(short(x.addr)) + "</a> — <span class=\"score\">" + x.score + " referrals</span></li>";
         }).join("")
         : '<li class="muted">No referrals yet.</li>';
+      var table = await fetchPointsTable();
+      var ranked = MintBoardPoints.rank(table, 10);
+      var totalEl = $("pointsTotal");
+      if (totalEl) totalEl.textContent = MintBoardPoints.total(table).toLocaleString() + " points awarded so far.";
+      pBoard.innerHTML = ranked.length
+        ? ranked.map(function (x) {
+          return '<li><a class="addr" href="' + esc(bscscan(x.addr)) + '" target="_blank" rel="noopener">' + esc(short(x.addr)) + "</a> — <span class=\"score\">" + x.points.toLocaleString() + " pts</span></li>";
+        }).join("")
+        : '<li class="muted">No points yet — mint a badge to score.</li>';
     } catch (e) {
       sBoard.innerHTML = '<li class="muted">Leaderboard is unavailable right now.</li>';
       rBoard.innerHTML = '<li class="muted">Leaderboard is unavailable right now.</li>';
+      pBoard.innerHTML = '<li class="muted">Leaderboard is unavailable right now.</li>';
     }
   }
 
@@ -714,6 +804,7 @@
       $("quests").innerHTML = '<p class="muted">Quests appear here after launch.</p>';
       $("streakBoard").innerHTML = '<li class="muted">The leaderboard appears after launch.</li>';
       $("referralBoard").innerHTML = '<li class="muted">The leaderboard appears after launch.</li>';
+      $("pointsBoard").innerHTML = '<li class="muted">The leaderboard appears after launch.</li>';
       return;
     }
     try {
