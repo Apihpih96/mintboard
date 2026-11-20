@@ -87,7 +87,13 @@ check method shown per listing.
 - Badge tab: "Mint today's badge" (passes `?ref=` address when present),
   streak display, streak/referral badge claims.
 - Quests tab: quest list + "Complete quest" buttons.
-- Leaderboard: top referrers + longest streaks, read from contract state.
+- Leaderboard: top points, top referrers + longest streaks, computed
+  from contract events.
+- Points (added 2026-11-20): every badge earns points — daily 10, quest
+  50, streak 10 per day of the tier, referral 25 per referral at the
+  tier. Computed client-side from badge events (frontend/points.js,
+  tested in test/points.test.js); the contract stores no points, so the
+  rules can change without redeploying.
 - Referral links: site URL + `?ref=<wallet address>`.
 - Engagement sections (added 2026-11-19): hero with live stats strip
   (badges minted, minters, best streak, countdown to the next UTC day),

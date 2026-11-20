@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MintBoard — Free mints for Agent ID holders</title>
-<meta name="description" content="MintBoard lists verified-free mints on BNB Smart Chain. Agent ID holders mint a free daily badge, build streaks, complete quests, and earn referral badges.">
+<meta name="description" content="MintBoard lists verified-free mints on BNB Smart Chain. Agent ID holders mint a free daily badge, build streaks, complete quests, earn referral badges, and collect points.">
 <meta property="og:title" content="MintBoard — Free mints for Agent ID holders">
-<meta property="og:description" content="A free daily badge, streaks, quests and referral badges. Verified-free mints only, gas costs only.">
+<meta property="og:description" content="A free daily badge, streaks, quests, referral badges and points. Verified-free mints only, gas costs only.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -73,6 +73,29 @@
       <div class="step"><span class="step-num">1</span><h3>Hold an Agent ID</h3><p>Badges are for Agent ID holders only. Your Agent ID is checked live on-chain, every time.</p></div>
       <div class="step"><span class="step-num">2</span><h3>Mint your daily badge</h3><p>Connect your wallet, mint in one tap, confirm in your wallet. Free badge, gas only.</p></div>
       <div class="step"><span class="step-num">3</span><h3>Keep the streak alive</h3><p>Come back every day, finish quests, invite friends — and watch your name climb the board.</p></div>
+    </div>
+  </section>
+
+  <section class="points" aria-label="How points work">
+    <h2>Collect points, climb the board</h2>
+    <p class="section-sub">Every badge you mint earns points. Points are computed from on-chain badge events — no hidden scores, anyone can check the maths.</p>
+    <div class="showcase-grid">
+      <div class="card">
+        <h3>10 pts — Daily badge</h3>
+        <p>10 points for every daily badge you mint. Show up every day and they add up fast.</p>
+      </div>
+      <div class="card">
+        <h3>50 pts — Quest badge</h3>
+        <p>50 points for each quest you complete by holding a featured NFT.</p>
+      </div>
+      <div class="card">
+        <h3>10&times; — Streak badge</h3>
+        <p>10 points per day of the tier: 30 for 3 days, 70 for 7, 140 for 14, and 300 for 30.</p>
+      </div>
+      <div class="card">
+        <h3>25&times; — Referral badge</h3>
+        <p>25 points per referral at the tier: 25 for 1 friend, 125 for 5, 250 for 10, and 625 for 25.</p>
+      </div>
     </div>
   </section>
 
@@ -151,9 +174,14 @@
   <section id="tab-leaderboard" class="panel hidden">
     <div class="panel-head">
       <h2>Leaderboard</h2>
-      <p>Computed from on-chain events. Streaks count consecutive UTC days ending today or yesterday. Your streak could be at the top — mint daily to get there.</p>
+      <p>Computed from on-chain events. Every badge earns points — daily 10, quest 50, streak 10 per day of the tier, referral 25 per referral. Streaks count consecutive UTC days ending today or yesterday. Your points could be at the top — mint daily to get there.</p>
     </div>
     <div class="grid2">
+      <div class="card wide">
+        <h3>Top points</h3>
+        <p class="muted small" id="pointsTotal"></p>
+        <ol id="pointsBoard" class="board"><li class="muted">Loading…</li></ol>
+      </div>
       <div class="card">
         <h3>Longest streaks</h3>
         <ol id="streakBoard" class="board"><li class="muted">Loading…</li></ol>
@@ -184,6 +212,10 @@
       <p>They are free collectibles with no promised value or returns. The fun is the streak, the quests, the leaderboard — and the friends you bring along.</p>
     </details>
     <details>
+      <summary>How do points work?</summary>
+      <p>Every badge earns points: daily 10, quest 50, streak 10 per day of the tier, referral 25 per referral at the tier. Points are computed from on-chain badge events, so anyone can verify the leaderboard. They are a score, not a token — no value, no cash-out.</p>
+    </details>
+    <details>
       <summary>Is my wallet safe here?</summary>
       <p>MintBoard never asks for seed phrases, private keys, or passwords, never moves your funds, and never asks for token approvals. You review and confirm every transaction in your own wallet, and the contract source is public and verified.</p>
     </details>
@@ -205,6 +237,7 @@
 <script src="vendor/ethers.umd.min.js"></script>
 <script src="config.js"></script>
 <script src="scan.js"></script>
+<script src="points.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
